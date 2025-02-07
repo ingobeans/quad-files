@@ -8,9 +8,11 @@ async fn main() {
         clear_background(BLACK);
         if file_data.is_empty() && dialog_open {
             let data = read_contents();
-            if let Some(data) = data {
+            if let FileInputResult::Data(data) = data {
                 dialog_open = false;
                 file_data = data;
+            } else if let FileInputResult::Canceled = data {
+                dialog_open = false;
             }
         }
         if is_key_pressed(KeyCode::Space) {
@@ -19,7 +21,13 @@ async fn main() {
         }
 
         draw_text("press [space] to select a file!", 20.0, 20.0, 30.0, WHITE);
-        draw_text(&format!("file {:?}", file_data), 20.0, 70.0, 30.0, WHITE);
+        draw_text(
+            &format!("file data: {:?}", file_data),
+            20.0,
+            70.0,
+            30.0,
+            WHITE,
+        );
         next_frame().await
     }
 }

@@ -20,7 +20,9 @@ extern "C" {
 
 // for some reason, JsObject.is_nil() doesn't seem to work
 // so instead i have this specific signature which means "there's no new data to be read"
-const NO_DATA_SIGNATURE: [u8; 3] = [1, 48, 90];
+const NULL_SIGNATURE: [u8; 3] = [1, 48, 90];
+// signature for user cancel input
+const CANCEL_SIGNATURE: [u8; 3] = [1, 48, 91];
 
 pub fn open_dialog() {
     #[cfg(target_arch = "wasm32")]
@@ -31,16 +33,24 @@ pub fn open_dialog() {
     }
 }
 
-pub fn read_contents() -> Option<Vec<u8>> {
+pub enum FileInputResult {
+    Canceled,
+    None,
+    Data(Vec<u8>),
+}
+
+pub fn read_contents() -> FileInputResult {
     #[cfg(target_arch = "wasm32")]
     {
         let file = unsafe { quad_files_read_contents() };
         let mut buf = Vec::new();
         file.to_byte_buffer(&mut buf);
-        if buf == NO_DATA_SIGNATURE {
-            return None;
+        if buf == NULL_SIGNATURE {
+            return FileInputResult::None;
+        } else if buf == CANCEL_SIGNATURE {
+            return FileInputResult::Canceled;
         }
-        return Some(buf);
+        return FileInputResult::Data(buf);
     }
-    None
+    FileInputResult::Canceled;
 }

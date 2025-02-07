@@ -6,30 +6,34 @@ params_set_mem = function (wasm_memory, _wasm_exports) {
   ctx = {};
 };
 
-const NO_DATA_SIGNATURE = [1, 48, 90];
+const NULL_SIGNATURE = [1, 48, 90];
+const CANCEL_SIGNATURE = [1, 48, 91];
 
-file_buffer = NO_DATA_SIGNATURE;
+file_buffer = NULL_SIGNATURE;
 
 function openPicker() {
   var input = document.createElement("input");
   // credit to https://codepen.io/udaymanvar/pen/MWaePBY
   input.type = "file";
-  input.onchange = (_) => {
+  input.addEventListener("change", (_) => {
     let files = Array.from(input.files);
-    console.log(files);
+    if (files.length == 0) {
+      file_buffer = CANCEL_SIGNATURE;
+    }
     files[0].bytes().then((bytes) => {
-      console.log(bytes);
       file_buffer = bytes;
     });
-  };
+  });
+  input.addEventListener("cancel", (_) => {
+    file_buffer = CANCEL_SIGNATURE;
+  });
   input.click();
 }
 
 params_register_js_plugin = function (importObject) {
   importObject.env.quad_files_read_contents = function () {
-    console.log("quad_files_open_dialog called");
     let data = file_buffer;
-    file_buffer = NO_DATA_SIGNATURE;
+    file_buffer = NULL_SIGNATURE;
     return js_object(data);
   };
   importObject.env.quad_files_open_dialog = function () {
