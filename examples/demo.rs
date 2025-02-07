@@ -19,7 +19,7 @@ async fn main() {
         // if file data has been read
         if let Some(file_data) = &file_data {
             // try to parse as text
-            let as_text = std::str::from_utf8(&file_data);
+            let as_text = std::str::from_utf8(file_data);
             if let Ok(text) = as_text {
                 draw_text(&format!("file text: {}", text), 20.0, 70.0, 30.0, WHITE);
             } else {
