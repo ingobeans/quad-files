@@ -1,6 +1,6 @@
 [package]
 name = "quad-files"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -10,3 +10,6 @@ sapp-jsutils = "0.1.4"
 egui-macroquad = "0.15.0"
 macroquad = "0.4.13"
 egui = "0.31.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rfd = "0.15.2"
