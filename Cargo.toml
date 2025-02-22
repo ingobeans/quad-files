@@ -9,7 +9,6 @@ sapp-jsutils = "0.1.4"
 [dev-dependencies]
 egui-macroquad = "0.15.0"
 macroquad = "0.4.13"
-egui = "0.31.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rfd = "0.15.2"
+rfd = { version = "0.15.2",default-features = false, features = ["gtk3"] }
