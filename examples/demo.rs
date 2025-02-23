@@ -14,7 +14,12 @@ async fn main() {
             dialog.open_dialog();
         }
 
-        draw_text("press [space] to select a file!", 20.0, 20.0, 30.0, WHITE);
+        if is_key_pressed(KeyCode::Enter) {
+            let _ = download("my_cool_file.txt", b"hello, world", Some("text file"));
+        }
+
+        draw_text("press [space] to open a file!", 20.0, 20.0, 30.0, WHITE);
+        draw_text("press [enter] to download a file!", 20.0, 50.0, 30.0, WHITE);
 
         // if file data has been read
         if let Some(file_data) = &file_data {

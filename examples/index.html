@@ -1,0 +1,33 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>demoooo!</title>
+    <style>
+      html,
+      body,
+      canvas {
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: absolute;
+        background: black;
+        z-index: 0;
+      }
+    </style>
+  </head>
+
+  <body oncontextmenu="return false;">
+    <canvas id="glcanvas" tabindex="1"></canvas>
+    <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/not-fl3/sapp-jsutils/js/sapp_jsutils.js"></script>
+    <script src="/js/quad-files.js"></script>
+    <script>
+      // load wasm
+      load(
+        "..%2Ftarget%2Fwasm32-unknown-unknown%2Frelease%2Fexamples%2Fdemo.wasm"
+      );
+    </script>
+  </body>
+</html>
