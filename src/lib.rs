@@ -18,7 +18,6 @@ extern "C" {
     fn quad_files_read_contents() -> JsObject;
     fn quad_files_download(path: JsObjectWeak, bytes: JsObjectWeak);
 }
-
 /// Open file dialog to save the bytes to a file.
 ///
 /// `filename` is requested file name
@@ -41,7 +40,7 @@ pub fn download(filename: &str, bytes: &[u8], filter: Option<&str>) -> Result<()
         let mut dialog = rfd::FileDialog::new().set_file_name(filename);
         if let Some(extension) = extension {
             if let Some(filter) = filter {
-                dialog = dialog.add_filter(filter, &vec![extension]);
+                dialog = dialog.add_filter(filter, &[extension]);
             }
         }
         let path = dialog.save_file();
@@ -53,17 +52,22 @@ pub fn download(filename: &str, bytes: &[u8], filter: Option<&str>) -> Result<()
     }
 }
 
-// for some reason, JsObject.is_nil() doesn't seem to work
-// so instead i have this specific signature which means "there's no new data to be read"
-const NULL_SIGNATURE: [u8; 3] = [1, 48, 90];
-// signature for user cancel input
-const CANCEL_SIGNATURE: [u8; 3] = [1, 48, 91];
+const NULL_STATE: u32 = 0;
+const CANCEL_STATE: u32 = 1;
+
+#[derive(Clone)]
+pub struct FileData {
+    pub name: String,
+    pub bytes: Vec<u8>,
+    pub size: usize,
+    pub timestamp: u64,
+}
 
 #[derive(Clone)]
 pub enum FileInputResult {
     Canceled,
     None,
-    Data(Vec<u8>),
+    Data(FileData),
 }
 
 pub struct FilePicker {
@@ -98,7 +102,20 @@ impl FilePicker {
         {
             let path = rfd::FileDialog::new().pick_file();
             if let Some(path) = path {
-                self.result_buffer = FileInputResult::Data(std::fs::read(path).unwrap());
+                let file = std::fs::read(&path).unwrap();
+                let metadata = std::fs::metadata(&path).unwrap();
+
+                self.result_buffer = FileInputResult::Data(FileData {
+                    name: path.file_name().unwrap().to_string_lossy().to_string(),
+                    size: file.len(),
+                    bytes: file,
+                    timestamp: metadata
+                        .modified()
+                        .unwrap()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
+                });
             } else {
                 self.result_buffer = FileInputResult::Canceled;
             }
@@ -143,15 +160,42 @@ pub fn open_dialog() {
 pub fn read_contents() -> FileInputResult {
     #[cfg(target_arch = "wasm32")]
     {
-        let file = unsafe { quad_files_read_contents() };
-        let mut buf = Vec::new();
-        file.to_byte_buffer(&mut buf);
-        if buf == NULL_SIGNATURE {
-            return FileInputResult::None;
-        } else if buf == CANCEL_SIGNATURE {
+        let js_object = unsafe { quad_files_read_contents() };
+
+        let state = js_object.field_u32("state");
+        if state == CANCEL_STATE {
             return FileInputResult::Canceled;
+        } else if state == NULL_STATE {
+            return FileInputResult::None;
         }
-        return FileInputResult::Data(buf);
+
+        let bytes_buf = {
+            let mut buf = Vec::new();
+            js_object.field("bytes").to_byte_buffer(&mut buf);
+            buf
+        };
+        let name_buf = {
+            let mut buf = String::new();
+            js_object.field("name").to_string(&mut buf);
+            buf
+        };
+        let size = {
+            let mut buf = String::new();
+            js_object.field("size").to_string(&mut buf);
+            buf.parse::<usize>().unwrap()
+        };
+        let timestamp = {
+            let mut buf = String::new();
+            js_object.field("timestamp").to_string(&mut buf);
+            buf.parse::<u64>().unwrap()
+        };
+
+        return FileInputResult::Data(FileData {
+            name: name_buf,
+            bytes: bytes_buf,
+            size,
+            timestamp,
+        });
     }
-    FileInputResult::Canceled
+    FileInputResult::None
 }
