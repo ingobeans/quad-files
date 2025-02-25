@@ -64,12 +64,19 @@ params_register_js_plugin = function (importObject) {
     let bytes = get_js_object(bytesObject);
     let path = get_js_object(pathObject);
     let mime = "application/octet-stream";
+
+    // create blob with file data
     var blob = new Blob([bytes], { type: mime });
     var objectUrl = URL.createObjectURL(blob);
+
+    // open blob link
     let a = document.createElement("a");
     a.href = objectUrl;
     a.download = path;
     a.click();
+
+    // clean up blob
+    URL.revokeObjectURL(objectUrl);
   };
 };
 
