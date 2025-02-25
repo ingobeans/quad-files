@@ -4,6 +4,7 @@ use quad_files::*;
 async fn main() {
     let mut file: Option<FileData> = None;
     let mut dialog = FilePicker::new();
+    let mut download_location = None;
     loop {
         clear_background(BLACK);
         // update dialog, if theres data, store it in file_data
@@ -15,13 +16,18 @@ async fn main() {
         }
 
         if is_key_pressed(KeyCode::Enter) {
-            let _ = download("my_cool_file.txt", b"hello, world", Some("text file"));
+            let result = download("my_cool_file.txt", b"hello, world", Some("text file"));
+
+            // on standalone, store the path the file was downloaded to
+            if let Ok(Some(location)) = result {
+                download_location = Some(location);
+            }
         }
 
         draw_text("press [space] to open a file!", 20.0, 20.0, 30.0, WHITE);
         draw_text("press [enter] to download a file!", 20.0, 50.0, 30.0, WHITE);
 
-        // if file data has been read
+        // if file data has been read, display info about it
         if let Some(file) = &file {
             draw_text(
                 &format!("file name: {}", file.name),
@@ -34,6 +40,20 @@ async fn main() {
                 &format!("last modified (unix timestamp): {}", file.timestamp),
                 20.0,
                 110.0,
+                30.0,
+                WHITE,
+            );
+        }
+
+        // if file has been downloaded (and on standalone), show the path it was downloaded to
+        if let Some(download_location) = &download_location {
+            draw_text(
+                &format!(
+                    "file downloaded to: {}",
+                    download_location.to_string_lossy()
+                ),
+                20.0,
+                140.0,
                 30.0,
                 WHITE,
             );

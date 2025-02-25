@@ -1,5 +1,7 @@
 #![allow(unused_variables)]
 
+use std::path::PathBuf;
+
 #[cfg(target_arch = "wasm32")]
 use sapp_jsutils::{JsObject, JsObjectWeak};
 
@@ -25,13 +27,19 @@ extern "C" {
 /// `bytes` is file data
 ///
 /// if `filter` is Some, only show files of the same type in the file picker. The &str contained will be the name of the filter
-pub fn download(filename: &str, bytes: &[u8], filter: Option<&str>) -> Result<(), std::io::Error> {
+///
+/// Returns [Result] holding an [Option] which on standalone will hold the path the file was saved to. This isn't available on the web and will be None.
+pub fn download(
+    filename: &str,
+    bytes: &[u8],
+    filter: Option<&str>,
+) -> Result<Option<PathBuf>, std::io::Error> {
     #[cfg(target_arch = "wasm32")]
     {
         unsafe {
             let object = JsObject::buffer(bytes);
             quad_files_download(JsObject::string(filename).weak(), object.weak());
-            Ok(())
+            Ok(None)
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
@@ -45,7 +53,8 @@ pub fn download(filename: &str, bytes: &[u8], filter: Option<&str>) -> Result<()
         }
         let path = dialog.save_file();
         if let Some(path) = path {
-            std::fs::write(path, bytes)
+            std::fs::write(&path, bytes)?;
+            Ok(Some(path))
         } else {
             Err(std::io::Error::other("File dialog was cancelled"))
         }
