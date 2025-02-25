@@ -43,7 +43,7 @@ for WASM, remember to add the js file(s) to your html after gl.js is loaded.
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/not-fl3/sapp-jsutils/js/sapp_jsutils.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ingobeans/quad-files@b4cd7475fcbe2821fff0abaadcc7f9a1f2d669b8/js/quad-files.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ingobeans/quad-files@1d74a4fc5335d045d367b2cd3ac2237e2fdfe038/js/quad-files.js"></script>
 ```
 
 ## docs?
