@@ -61,7 +61,9 @@ pub fn download(
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 const NULL_STATE: u32 = 0;
+#[cfg(target_arch = "wasm32")]
 const CANCEL_STATE: u32 = 1;
 
 #[derive(Clone)]
@@ -131,26 +133,22 @@ impl FilePicker {
         }
     }
     pub fn update(&mut self) -> FileInputResult {
-        #[cfg(target_arch = "wasm32")]
-        {
-            if self.waiting_for_result {
+        if self.waiting_for_result {
+            #[cfg(target_arch = "wasm32")]
+            {
                 let contents = read_contents();
                 if !matches!(contents, FileInputResult::None) {
                     self.waiting_for_result = false;
                 }
                 contents
-            } else {
-                FileInputResult::None
             }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if self.waiting_for_result {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
                 self.waiting_for_result = false;
                 self.result_buffer.clone()
-            } else {
-                FileInputResult::None
             }
+        } else {
+            FileInputResult::None
         }
     }
 }
@@ -206,5 +204,6 @@ pub fn read_contents() -> FileInputResult {
             timestamp,
         });
     }
+    #[cfg(not(target_arch = "wasm32"))]
     FileInputResult::None
 }
